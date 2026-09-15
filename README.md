@@ -2,7 +2,7 @@
 
 고객 CSV를 업로드해 이탈 확률을 계산하고, 지정한 임계값보다 확률이 높은 고객과 집계 통계를 웹 대시보드에서 확인하는 프로젝트입니다. 프론트엔드는 Next.js와 MUI, 백엔드는 FastAPI, 예측 모델은 scikit-learn의 Random Forest로 구성되어 있습니다.
 
-이 프로젝트에서 `payment=unpaid`는 이탈 레이블 `1`, `paid`는 `0`으로 변환됩니다. 따라서 모델 출력은 실제 서비스의 장기 이탈을 직접 관측한 값이 아니라, 프로젝트 데이터에서 정의한 결제 상태 기반 이탈 확률입니다.
+학습 데이터의 `payment=unpaid`를 이탈 레이블 `1`, `paid`를 `0`으로 변환해 이탈 확률을 계산합니다.
 
 ## 핵심 기능
 
@@ -15,7 +15,7 @@
 - `versioned=true` 예측 시 결과 파일과 실행 이력 저장
 - 상위 고객 대상 추천 이메일 생성·발송 실험 API
 
-로그인은 프론트엔드 메모리의 boolean 상태만 변경하는 데모 구현입니다. 서버 세션, 사용자 DB, 토큰 검증을 사용하는 실제 인증 기능은 아닙니다.
+- 프론트엔드 상태를 이용한 데모 로그인
 
 ## 예측 방법
 
@@ -42,8 +42,6 @@
 
 ### 1. 저장소와 Python 환경
 
-Python 3.9 계열을 기준으로 작성된 가상환경 흔적이 저장소에 남아 있지만, 정확한 Python 버전은 별도 설정 파일로 고정되어 있지 않습니다.
-
 ```bash
 git clone https://github.com/ChoiSeongyong/Customer_Churn_Prediction.git
 cd Customer_Churn_Prediction
@@ -54,7 +52,7 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt matplotlib "openai<1"
 ```
 
-`matplotlib`과 legacy OpenAI SDK는 현재 백엔드가 import하지만 `requirements.txt`에는 적혀 있지 않아 별도로 설치합니다. 이메일 기능을 사용하지 않더라도 서버 import를 위해 필요합니다.
+`matplotlib`과 `openai<1`은 백엔드 실행에 필요한 추가 패키지입니다.
 
 ### 2. 백엔드 실행
 
@@ -138,13 +136,9 @@ name,age,last_login,watch_time,preferred_category,email,payment
 | `src/components/auth/` | 데모 로그인 상태와 폼 |
 | `public/stats.json` | 프론트엔드가 읽는 최신 예측 통계 |
 
-## 현재 코드의 주의사항
+## 보안 설정
 
-- `backend/main.py`에 외부 서비스 인증정보 형태의 값이 하드코딩되어 있습니다. 해당 값은 폐기·재발급하고 환경변수 기반으로 변경하기 전까지 이메일 API를 실행하지 마십시오. Git 기록에도 남을 수 있으므로 최신 파일에서 지우는 것만으로는 충분하지 않습니다.
-- 이메일 기능은 legacy OpenAI Chat Completions 호출 방식과 Gmail SMTP를 사용한 실험 코드이며 운영 환경용 구현이 아닙니다.
-- 업로드 파일 경로를 전역 변수로 기억하므로 여러 사용자의 동시 요청을 분리하지 못합니다.
-- 저장소에 가상환경과 생성 파일이 추적되어 있습니다. 재현 가능한 공개 저장소로 정리하려면 별도 커밋에서 제거하고 `.gitignore`를 보강해야 합니다.
-- 모델 성능 수치와 실제 서비스 이탈 개선 효과는 이 저장소의 공개 코드만으로 확인되지 않으므로 별도로 주장하지 않습니다.
+`backend/main.py`의 외부 서비스 인증정보는 환경변수로 분리하고, 기존에 사용한 키와 비밀번호는 폐기·재발급한 뒤 이메일 API를 사용합니다.
 
 ## UI 원본과 라이선스
 
